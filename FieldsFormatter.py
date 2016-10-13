@@ -4,6 +4,8 @@
 import re
 import os
 import datetime
+import time
+import math
 
 # 解析字段，返回list
 def parseField(readContent):
@@ -109,6 +111,24 @@ def moveRootPath():
 
 def getCurrentTime():
 	return str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+# 将秒格式化成时间段
+def formatSeconds(allTime):
+    day = 24*60*60
+    hour = 60*60
+    min = 60
+    if allTime <60:
+        return  "%d sec"%math.ceil(allTime)
+    elif  allTime > day:
+        days = divmod(allTime,day)
+        return "%d days, %s"%(int(days[0]),formatSeconds(days[1]))
+    elif allTime > hour:
+        hours = divmod(allTime,hour)
+        return '%d hours, %s'%(int(hours[0]),formatSeconds(hours[1]))
+    else:
+        mins = divmod(allTime,min)
+        return "%d mins, %d sec"%(int(mins[0]),math.ceil(mins[1]))
+
 """
 def listToDict(listContent):
 	dict_content = {}
@@ -117,7 +137,7 @@ def listToDict(listContent):
 	return dict_content
 """
 if __name__=="__main__":
-	
+	start = time.clock()
 	#editPath = raw_input("Enter a file you want to edit : ");		# 要修改的文件
 	#referPath = raw_input("Enter a file to be refer to : ");		# 参照的文件
 
@@ -144,3 +164,5 @@ if __name__=="__main__":
 	#printResult(getPatch(chinese,english))
 	#printResult(english)
 	#print(len(english))
+	end = time.clock()
+	print formatSeconds(end - start)
