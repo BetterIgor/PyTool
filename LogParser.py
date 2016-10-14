@@ -7,21 +7,24 @@ import math
 import csv
 
 # 格式化单个结果
-def formatResult(result):
+def formatResult(result,addBracket):
 	item = []
 	content = []
 	temp = str(result).split('\'')
 	for index in range(len(temp)):
 		if index%2 != 0:
-			item.append(temp[index].strip())
+			string = temp[index].strip()
+			if index == 5 and addBracket:
+				string = temp[index].strip() + ")"
+			item.append(string)
 	content.append(item)
 	return content
 
 # 格式化全部结果
-def formatResults(result):
+def formatResults(result,addBracket):
 	content = []
 	for item in result:
-		content.append(formatResult(item))
+		content.append(formatResult(item,addBracket))
 	return content
 
 # 序列化结果
@@ -75,6 +78,6 @@ for line in open("tsm-middletier.stdout.log.20160906"):
 		second = re.findall(secondRe,line)
 		secondResult.append(second)
 
-serializeResult(formatResults(firstResult),formatResults(secondResult),"rererereer")
+serializeResult(formatResults(firstResult,True),formatResults(secondResult,False),"rererereer")
 end = time.clock()
 print formatSeconds(end - start)
