@@ -1,0 +1,21 @@
+#!/usr/bin/python  
+# -*- coding:utf8 -*-  
+
+import os
+
+while True:
+    count = 0
+    dirSource=raw_input("enter your file path: ")
+    if dirSource == "quit":
+        print "bye."
+        break;
+    targetDir = dirSource + "-webp/"
+    os.mkdir(targetDir)
+    for filename in os.listdir(dirSource): 
+        name = os.path.splitext(filename)[0]
+        suffix = os.path.splitext(filename)[1]
+        if suffix == ".png":
+            commands =  "cwebp " + dirSource + "/" + filename + ' -o ' + targetDir + name + ".webp"
+            os.system(commands)
+            count = count + 1
+    print "convert complete " + str(count) + " files."
