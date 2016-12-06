@@ -3,7 +3,7 @@
 
 # eg:
 # input: drawable-xxhdpi
-# output: drawable-xxhdpi-webp(png 转成 webp,9图直接copy)
+# output: drawable-xxhdpi-webp(png 转成 webp,9图或者其他文件直接copy)
 
 import os
 import shutil
