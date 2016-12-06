@@ -1,6 +1,10 @@
 #!/usr/bin/python  
 # -*- coding:utf8 -*-  
 
+# eg:
+# input: drawable-xxhdpi
+# output: drawable-xxhdpi-webp(png 转成 webp,9图直接copy)
+
 import os
 import shutil
 
