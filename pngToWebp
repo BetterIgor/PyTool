@@ -4,6 +4,8 @@
 # eg:
 # input: drawable-xxhdpi
 # output: drawable-xxhdpi-webp(png 转成 webp,9图直接copy)
+#!/usr/bin/python  
+# -*- coding:utf8 -*-  
 
 import os
 import shutil
@@ -29,4 +31,6 @@ while True:
             commands =  "cwebp " + dirSource + "/" + filename + ' -o ' + targetDir + splitList[0] + ".webp"
             os.system(commands)
             count = count + 1
+        else:
+            shutil.copyfile(dirSource + "/"+filename, targetDir + filename)
     print "convert complete " + str(count) + " files."
