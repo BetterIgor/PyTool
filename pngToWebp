@@ -2,20 +2,27 @@
 # -*- coding:utf8 -*-  
 
 import os
+import shutil
 
 while True:
     count = 0
     dirSource=raw_input("enter your file path: ")
     if dirSource == "quit":
         print "bye."
-        break;
+        break
+    if os.path.exists(dirSource) == False:
+        break
     targetDir = dirSource + "-webp/"
+    if os.path.exists(targetDir):
+        shutil.rmtree(targetDir)
     os.mkdir(targetDir)
     for filename in os.listdir(dirSource): 
-        name = os.path.splitext(filename)[0]
-        suffix = os.path.splitext(filename)[1]
-        if suffix == ".png":
-            commands =  "cwebp " + dirSource + "/" + filename + ' -o ' + targetDir + name + ".webp"
+        splitList = filename.split('.')
+        if splitList[len(splitList)-2] == "9":
+            shutil.copyfile(dirSource + "/"+filename, targetDir + filename)
+            continue
+        if splitList[len(splitList)-1] == "png":
+            commands =  "cwebp " + dirSource + "/" + filename + ' -o ' + targetDir + splitList[0] + ".webp"
             os.system(commands)
             count = count + 1
     print "convert complete " + str(count) + " files."
