@@ -13,3 +13,21 @@ FieldsFormatter.py 主要是用来格式化资源文件（如：string），适�
       然后将all.xml备份a，并对应将english.xml中字段的值在a中替换（中文的值修改为英文），最后输出新的chinese.xml,english.xml文件(此时的文件，
       即可达到字段的同步（不遗漏，位置对应）)。
       以此类推，可以实现不同语言中字段的同步。
+
+
+SMParser.py：主要用力整理StrictMode生成的日志包括合并、去重、排序等。
+可以在项目中使用StrictMode，用adb logcat -s StrictMode  > log.txt生成日志，然后放置与SMParser.py同级目录并运行。
+StrictMode示例：
+public class StrictModeManager {
+    public static void init() {
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                .detectAll()
+                .penaltyLog()
+                .build());
+
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                .detectAll()
+                .penaltyLog()
+                .build());
+    }
+}
