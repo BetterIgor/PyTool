@@ -24,7 +24,6 @@ public class StrictModeManager {
                 .detectAll()
                 .penaltyLog()
                 .build());
-
         StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
                 .detectAll()
                 .penaltyLog()
