@@ -17,3 +17,17 @@ FieldsFormatter.py 主要是用来格式化资源文件（如：string），适�
 
 SMParser.py：主要用力整理StrictMode生成的日志包括合并、去重、排序等。
 可以在项目中使用StrictMode，用adb logcat -s StrictMode  > log.txt生成日志，然后放置与SMParser.py同级目录并运行。
+StrictMode示例：
+public class StrictModeManager {
+    public static void init() {
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                .detectAll()
+                .penaltyLog()
+                .build());
+
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                .detectAll()
+                .penaltyLog()
+                .build());
+    }
+}
