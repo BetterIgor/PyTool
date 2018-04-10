@@ -65,7 +65,7 @@ listInfo = re.compile('.+ StrictMode:').sub('', fileContent).split(policyViolati
 for info in listInfo:
     splitInfoList = info.split(resourceLeaksSplit)
     for splitInfo in splitInfoList:
-        key = getKeyofList(splitInfo)
+        key = re.compile('\d').sub('', getKeyofList(splitInfo))
         if "android.os.StrictMode$StrictModeDiskReadViolation" in splitInfo:
 
             # 统计日志重复的次数
