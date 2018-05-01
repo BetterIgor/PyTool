@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<widget id="gdpr" version="1.0">
+    
+
+    <feature name="网索">
+        <param name="title" value="网索"/>
+        <module desc="搜索功" id="FMA_140" necessary="true">
+            <info desc="搜索关" id="MAD_68" necessary="true"/>
+        </module>
+        <module desc="搜索引索建议" id="FMA_142" necessary="true">
+            <info desc="搜索关" id="MAD_68" necessary="true"/>
+        </module>
+    </feature>
+    
+
+    <feature name="浏览页">
+        <param name="title" value="浏览页"/>
+        <module desc="安" id="FMA_200" necessary="true">
+            <info desc="URL" id="MAD_75" necessary="true"/>
+        </module>
+        <module desc="访问网" id="FMA_149" necessary="true">
+            <info desc="URL" id="MAD_75" necessary="true"/>
+            <info desc="地理位置" id="MAD_76" necessary="true"/>
+        </module>
+        <module desc="网页缓存" id="FMA_150" necessary="true">
+            <info desc="网页数据" id="MAD_77" necessary="true"/>
+            <info desc="cookie" id="MAD_78" necessary="true"/>
+        </module>
+    </feature>
+    
+
+    <feature name="热词">
+        <param name="title" value="热词"/>
+        <module desc="行榜" id="FMA_160" necessary="true">
+            <info desc="内容ID" id="MAD_82" necessary="true"/>
+        </module>
+    </feature>
+</widget>
