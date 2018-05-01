@@ -32,4 +32,4 @@ public class StrictModeManager {
 }
 
 
-parser.py:按照excel中的列（可一对多）归并为xml中的结构。input是实例文件，output是归并结果
+parser.py:按照excel中的列（可一对多）归并为xml中的结构。input是实例文件，output是归并结果（可能需要手动导入xlrd库：pip3 install xlrd）
