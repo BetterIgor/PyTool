@@ -30,3 +30,6 @@ public class StrictModeManager {
                 .build());
     }
 }
+
+
+parser.py:按照excel中的列（可一对多）归并为xml中的结构。input是实例文件，output是归并结果
