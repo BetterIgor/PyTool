@@ -36,10 +36,14 @@ def printResult(content):
 		print(data[0] + "=" + data[1])
 	print ("个数：" + str(len(content)))
 
+# 将小写字母的颜色值全部转成大些字母，颜色不区分大小写，引用保持不变
 def list2Dict(fields):
 	resultDict = dict()
 	for field in fields:
-		resultDict[field[0]] = field[1]
+		if(field[1].startswith("#")):
+			resultDict[field[0]] = field[1].upper()
+		else:
+			resultDict[field[0]] = field[1]
 	return resultDict
 
 def printFormater(res):
