@@ -42,9 +42,13 @@ parser.py
 按照excel中的列（可一对多）归并为xml中的结构。input是实例文件，output是归并结果（可能需要手动导入xlrd库：pip3 install xlrd）
 
 
-
 <pre>
 night-mode.py
 </pre>
 用来统一颜色，将定义相同颜色值的color引用到相同的color，方便夜间模式的修改，也方便后续的维护。使用方法：将apk反编译拿到colors，在同级目录运行即可
 
+
+<pre>
+layoutParser.py 
+</pre>
+遍历Android中的所有布局的层级并排序输出（然后将层级到的布局使用约束布局去优化
