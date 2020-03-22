@@ -1,6 +1,8 @@
 #-*- coding: UTF-8 -*- 
 import xml.etree.ElementTree as ET
 import os
+import sys
+import json
 
 levelMax = 1
  
@@ -29,7 +31,7 @@ def findMaxLevel(fileName):
  
 if __name__ == '__main__':
 
-   dirPath = "layout"
+   dirPath = sys.argv[1]
    result = dict()
    for parent, dirnames, filenames in os.walk(dirPath,  followlinks=True):
       for fileName in filenames:
@@ -40,6 +42,19 @@ if __name__ == '__main__':
             result[filePath] = levelMax
 
    sortedResult = sorted(result.items(), key=lambda result:result[1], reverse=True)
-   for fileName in sortedResult:
-      print (fileName)
+
+   resultFormater = {
+     "LEVEL_MAX":'',
+     "LEVEL_AVG":'',
+     "DATA_LIST":[]
+   }
+
+   sumLevel = 0
+   for levelInfo in sortedResult:
+      sumLevel = sumLevel + levelInfo[1]
+      resultFormater["DATA_LIST"].append(levelInfo)
+
+   resultFormater["LEVEL_MAX"] = resultFormater["DATA_LIST"][0][1]
+   resultFormater["LEVEL_AVG"] = round(sumLevel / len(resultFormater["DATA_LIST"]), 2)
+   print(json.dumps(obj=resultFormater))
 
