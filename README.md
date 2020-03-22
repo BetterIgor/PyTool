@@ -57,7 +57,7 @@ layoutParser.py
 <pre>
 EyeLogParser.py
 </pre>
-用来解析GodEye生产出来的日志，可以展示一段时间内被测的情况从而进一步优化。通过指定apk的路径得到大小，然后反编译后用LayoutParser得到应用的布局层级。其中BASE_INFO的数据GodEye没有，是从app中输出的。最终展示信息如:
+用来解析GodEye生产出来的日志，可以展示一段时间内被测的情况从而进一步优化。通过指定apk的路径得到大小，然后反编译后用LayoutParser得到应用的布局层级。其中BASE_INFO的数据GodEye没有，是从app中输出的，GodEye集成见eye_monitor.patch。最终展示信息如:
 <pre>
 {
     "===================基本信息===================":"",
