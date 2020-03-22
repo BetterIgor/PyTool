@@ -51,4 +51,4 @@ night-mode.py
 <pre>
 layoutParser.py 
 </pre>
-遍历Android中的所有布局的层级并排序输出（然后将层级到的布局使用约束布局去优化
+遍历Android中的所有布局的层级并排序输出（然后将层级到的布局使用约束布局去优化，参数需要指定layout的目录。如：python3 LayoutParser.py /Users/igor/workspace/app/res/layout
