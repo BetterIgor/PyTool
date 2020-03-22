@@ -1,0 +1,562 @@
+Index: AndroidGodEye-MethodCanary.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- AndroidGodEye-MethodCanary.js	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
++++ AndroidGodEye-MethodCanary.js	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
+@@ -0,0 +1,19 @@
++/**
++    classInfo
++        {int access
++         String name
++         String superName
++         String[] interfaces}
++
++     methodInfo
++         {int access
++         String name
++         String desc}
++**/
++function isExclude(classInfo,methodInfo){
++    return false
++}
++
++function isInclude(classInfo,methodInfo){
++    return classInfo.name.startsWith('com/douban/frodo')
++}
+\ No newline at end of file
+Index: app/build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/build.gradle	(revision aef837f89e46b245e63f3b302de3227e2f16aae5)
++++ app/build.gradle	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
+@@ -8,6 +8,7 @@
+ apply plugin: 'kotlin-android'
+ 
+ apply plugin: 'kotlin-android-extensions'
++apply plugin: 'cn.hikyson.methodcanary.plugin'
+ 
+ apply from: '../douban_sign.gradle'
+ apply from: 'setup_rexxar.gradle'
+@@ -355,6 +356,12 @@
+     compile(name: 'AlicomPhoneNumberAuthSDK_L_Release_20191219_202532', ext : 'aar')
+ 
+     api(name: 'miit_mdid_1.0.9', ext : 'aar')
++
++    implementation "cn.hikyson.godeye:godeye-core:${EYE_VERSION}"
++    releaseImplementation "cn.hikyson.godeye:godeye-monitor-no-op:${EYE_VERSION}"
++    implementation "cn.hikyson.godeye:godeye-monitor:${EYE_VERSION}"
++    implementation "cn.hikyson.godeye:godeye-okhttp:${EYE_VERSION}"
++    implementation "cn.hikyson.godeye:godeye-xcrash:${EYE_VERSION}"
+ }
+ 
+ ArrayList<String> ACTIVITY_CONFIG_CHANGES_DEFAULT = new ArrayList<String>() {
+Index: app/src/main/assets/eye_config.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/assets/eye_config.xml	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
++++ app/src/main/assets/eye_config.xml	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
+@@ -0,0 +1,24 @@
++<config>
++    <battery />
++    <cpu intervalMillis="2000" sampleMillis="1000"/>
++    <fps intervalMillis="2000"/>
++    <heap intervalMillis="2000"/>
++    <leakMemory debug="true" debugNotification="true" leakRefInfoProvider="cn.hikyson.godeye.core.internal.modules.leakdetector.DefaultLeakRefInfoProvider"/>
++    <pageload pageInfoProvider="cn.hikyson.godeye.core.internal.modules.pageload.DefaultPageInfoProvider"/>
++    <pss intervalMillis="2000"/>
++    <ram intervalMillis="2000"/>
++    <sm debugNotify="true"
++        dumpIntervalMillis="500"
++        longBlockThresholdMillis="500"
++        shortBlockThresholdMillis="500"/>
++    <traffic intervalMillis="2000" sampleMillis="1000"/>
++    <methodCanary maxMethodCountSingleThreadByCost="300" lowCostMethodThresholdMillis="10"/>
++    <startup />
++<!--    <network />-->
++<!--    <crash immediate="true" crashProvider="cn.hikyson.godeye.core.internal.modules.crash.CrashFileProvider"/>-->
++<!--    <thread intervalMillis="3000"-->
++<!--            threadFilter="cn.hikyson.godeye.core.internal.modules.thread.ExcludeSystemThreadFilter"/>-->
++<!--    <viewCanary maxDepth="5"/>-->
++<!--    <imageCanary imageCanaryConfigProvider="cn.hikyson.godeye.core.internal.modules.imagecanary.DefaultImageCanaryConfigProvider"/>-->
++    <appSize delayMillis="0"/>
++</config>
+\ No newline at end of file
+Index: app/src/main/java/com/douban/frodo/FrodoApplication.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/douban/frodo/FrodoApplication.java	(revision aef837f89e46b245e63f3b302de3227e2f16aae5)
++++ app/src/main/java/com/douban/frodo/FrodoApplication.java	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
+@@ -51,6 +51,8 @@
+ import com.douban.frodo.chat.model.Chat;
+ import com.douban.frodo.crop.sub.CropImplManager;
+ import com.douban.frodo.debug.HttpDnsDebugConfig;
++import com.douban.frodo.eye.Eye;
++import com.douban.frodo.eye.EyeLogConsumer;
+ import com.douban.frodo.fangorns.crop.CropProviderImpl;
+ import com.douban.frodo.fangorns.media.AudioModuleApplication;
+ import com.douban.frodo.fangorns.media.downloader.DownloaderManager;
+@@ -134,9 +136,12 @@
+ 
+     public static boolean SKIP_AD = false;
+ 
++    public static long sApplicationStartTime;
++
+     @Override
+     protected void attachBaseContext(final Context base) {
+         super.attachBaseContext(base);
++        sApplicationStartTime = System.currentTimeMillis();
+         MultiDex.install(base);
+ 
+         // 只针对6.0以上设备上报
+@@ -174,10 +179,22 @@
+         }
+     }
+ 
++    private void installEye(Application application) {
++        if (application == null) {
++            return;
++        }
++        if (com.douban.frodo.baseproject.util.Utils.isMainProcess(application)
++                || com.douban.frodo.baseproject.util.Utils.isToolsProcess(application)) {
++
++            Eye.instance().install(application);
++            Eye.instance().setConsumer(new EyeLogConsumer());
++        }
++    }
++
+     @Override
+     public void onCreate() {
+         super.onCreate();
+-
++        installEye(this);
+         // ensure asyncTask loaded
+         try {
+             Class.forName("android.os.AsyncTask");
+Index: app/src/main/java/com/douban/frodo/MainActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/douban/frodo/MainActivity.java	(revision aef837f89e46b245e63f3b302de3227e2f16aae5)
++++ app/src/main/java/com/douban/frodo/MainActivity.java	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
+@@ -68,6 +68,7 @@
+ import com.douban.frodo.baseproject.view.CircleImageView;
+ import com.douban.frodo.baseproject.view.HackViewPager;
+ import com.douban.frodo.birth.Birthday;
++import com.douban.frodo.eye.Eye;
+ import com.douban.frodo.fangorns.media.AudioPlayerManager;
+ import com.douban.frodo.fangorns.media.model.Media;
+ import com.douban.frodo.fangorns.model.FeatureSwitch;
+@@ -369,6 +370,11 @@
+             trackFriendsInstalled(friendApp);
+         }
+         setNightNavigationBar(this);
++
++        if (mStopMonitorFlag) {
++            mStopMonitorFlag = false;
++            FrodoHandler.getInstance().removeRunnable(mStopMonitorRunnable);
++        }
+     }
+ 
+     private void trackClickPublish(String type, String source) {
+@@ -492,6 +498,14 @@
+         super.onSaveInstanceState(outState);
+     }
+ 
++    private boolean mStopMonitorFlag = false;
++    private Runnable mStopMonitorRunnable = new Runnable() {
++        @Override
++        public void run() {
++            Eye.instance().unInstallAll();
++        }
++    };
++
+     @Override
+     protected void onDestroy() {
+         BusProvider.getInstance()
+@@ -502,6 +516,10 @@
+         com.douban.frodo.baseproject.util.Utils.clearWebViewCookies(MainActivity.this);
+         super.onDestroy();
+         mAdapter = null;
++
++        mStopMonitorFlag = true;
++        // 后台采集10min后自动关闭
++        FrodoHandler.getInstance().postRunnableDelayBackgroundThread(mStopMonitorRunnable, 1000 * 60 * 10);
+     }
+ 
+     private void removeBackgroundRunnable() {
+Index: app/src/main/java/com/douban/frodo/activity/SplashActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/douban/frodo/activity/SplashActivity.java	(revision aef837f89e46b245e63f3b302de3227e2f16aae5)
++++ app/src/main/java/com/douban/frodo/activity/SplashActivity.java	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
+@@ -49,6 +49,7 @@
+ import com.douban.frodo.baseproject.screenshot.ScreenShotObserver;
+ import com.douban.frodo.baseproject.toolbox.FeatureManager;
+ import com.douban.frodo.baseproject.upload.UploadTaskManager;
++import com.douban.frodo.baseproject.util.FrodoHandler;
+ import com.douban.frodo.baseproject.util.NotchUtils;
+ import com.douban.frodo.birth.Birthday;
+ import com.douban.frodo.birth.BirthdayView;
+@@ -73,6 +74,9 @@
+ import java.lang.ref.WeakReference;
+ import java.util.List;
+ 
++import cn.hikyson.godeye.core.GodEyeHelper;
++import cn.hikyson.godeye.core.exceptions.UninstallException;
++import cn.hikyson.godeye.core.internal.modules.startup.StartupInfo;
+ import pub.devrel.easypermissions.EasyPermissions;
+ 
+ /**
+@@ -173,6 +177,7 @@
+ 
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
++        final long homeCreateTime = System.currentTimeMillis();
+         mSavedInstanceState = savedInstanceState;
+         super.onCreate(savedInstanceState);
+         // 修复通过installer安装app后, 退到后台再次回来无法恢复之前页面的情况
+@@ -227,6 +232,24 @@
+             FeatureManager.getInstance().fetchAndUpdateAppFeatureSwitch();
+             fetchEntryList();
+         }
++
++        getWindow().getDecorView().post(new Runnable() {
++            @Override
++            public void run() {
++                FrodoHandler.getInstance().postRunnableUIThread(new Runnable() {
++                    @Override
++                    public void run() {
++                        try {
++                            GodEyeHelper.onAppStartEnd(new StartupInfo(FrodoApplication.sApplicationStartTime > 0 ?
++                                    StartupInfo.StartUpType.COLD : StartupInfo.StartUpType.HOT, FrodoApplication.sApplicationStartTime > 0 ? (System.currentTimeMillis() - FrodoApplication.sApplicationStartTime) : (System.currentTimeMillis() - homeCreateTime)));
++                        } catch (UninstallException e) {
++                            e.printStackTrace();
++                        }
++                        FrodoApplication.sApplicationStartTime = 0;
++                    }
++                });
++            }
++        });
+     }
+ 
+     private void fetchEntryList() {
+Index: app/src/main/java/com/douban/frodo/eye/Eye.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/douban/frodo/eye/Eye.java	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
++++ app/src/main/java/com/douban/frodo/eye/Eye.java	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
+@@ -0,0 +1,197 @@
++package com.douban.frodo.eye;
++
++import android.app.Application;
++
++import com.douban.frodo.BuildConfig;
++
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.List;
++
++import cn.hikyson.android.godeye.okhttp.HttpContent;
++import cn.hikyson.godeye.core.GodEye;
++import cn.hikyson.godeye.core.GodEyeConfig;
++import cn.hikyson.godeye.core.internal.modules.appsize.AppSizeInfo;
++import cn.hikyson.godeye.core.internal.modules.battery.BatteryInfo;
++import cn.hikyson.godeye.core.internal.modules.cpu.CpuInfo;
++import cn.hikyson.godeye.core.internal.modules.crash.CrashInfo;
++import cn.hikyson.godeye.core.internal.modules.fps.FpsInfo;
++import cn.hikyson.godeye.core.internal.modules.imagecanary.ImageIssue;
++import cn.hikyson.godeye.core.internal.modules.leakdetector.LeakQueue;
++import cn.hikyson.godeye.core.internal.modules.memory.HeapInfo;
++import cn.hikyson.godeye.core.internal.modules.memory.PssInfo;
++import cn.hikyson.godeye.core.internal.modules.memory.RamInfo;
++import cn.hikyson.godeye.core.internal.modules.methodcanary.MethodsRecordInfo;
++import cn.hikyson.godeye.core.internal.modules.network.NetworkInfo;
++import cn.hikyson.godeye.core.internal.modules.pageload.PageLifecycleEventInfo;
++import cn.hikyson.godeye.core.internal.modules.sm.BlockInfo;
++import cn.hikyson.godeye.core.internal.modules.startup.StartupInfo;
++import cn.hikyson.godeye.core.internal.modules.thread.ThreadInfo;
++import cn.hikyson.godeye.core.internal.modules.traffic.TrafficInfo;
++import cn.hikyson.godeye.core.internal.modules.viewcanary.ViewIssueInfo;
++import cn.hikyson.godeye.monitor.GodEyeMonitor;
++import cn.hikyson.godeye.monitor.modules.appinfo.AppInfoLabel;
++import io.reactivex.functions.Consumer;
++
++public class Eye {
++
++    private static class InstanceHolder {
++        private static final Eye sInstance = new Eye();
++    }
++
++    public static Eye instance() {
++        return InstanceHolder.sInstance;
++    }
++
++    private EyeConsumer mConsumer;
++
++    public void install(Application application) {
++        GodEye.instance().init(application);
++        GodEye.instance().install(GodEyeConfig.fromAssets("eye_config.xml"));
++        GodEyeMonitor.injectAppInfoConext(new GodEyeMonitor.AppInfoConext() {
++            @Override
++            public List<AppInfoLabel> getAppInfo() {
++                List<AppInfoLabel> appInfoLabels = new ArrayList<>();
++                appInfoLabels.add(new AppInfoLabel("ApplicationID", BuildConfig.APPLICATION_ID, null));
++                appInfoLabels.add(new AppInfoLabel("VersionName", BuildConfig.VERSION_NAME, ""));
++                appInfoLabels.add(new AppInfoLabel("VersionCode", String.valueOf(BuildConfig.VERSION_CODE), ""));
++                appInfoLabels.add(new AppInfoLabel("BuildType", BuildConfig.BUILD_TYPE, ""));
++                return appInfoLabels;
++            }
++        });
++        GodEyeMonitor.setClassPrefixOfAppProcess(Collections.singletonList("com.douban.frodo"));
++        GodEyeMonitor.work(application);
++    }
++
++    public void unInstallAll() {
++        GodEye.instance().uninstall();
++    }
++
++    public void setConsumer(EyeConsumer consumer) {
++        if (consumer == null) {
++            return;
++        }
++        mConsumer = consumer;
++
++        try {
++            setInternalConsumers();
++        } catch (Exception e) {
++            e.printStackTrace();
++        }
++    }
++
++    private void setInternalConsumers() throws Exception {
++        GodEye.instance().observeModule(GodEye.ModuleName.SM, new Consumer<BlockInfo>() {
++            @Override
++            public void accept(BlockInfo blockInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.SM, blockInfo);
++            }
++        });
++        GodEye.instance().observeModule(GodEye.ModuleName.METHOD_CANARY, new Consumer<MethodsRecordInfo>() {
++            @Override
++            public void accept(MethodsRecordInfo methodsRecordInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.METHOD_CANARY, methodsRecordInfo);
++            }
++        });
++
++        GodEye.instance().observeModule(GodEye.ModuleName.STARTUP, new Consumer<StartupInfo>() {
++            @Override
++            public void accept(StartupInfo startupInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.STARTUP, startupInfo);
++            }
++        });
++
++        GodEye.instance().observeModule(GodEye.ModuleName.LEAK, new Consumer<LeakQueue.LeakMemoryInfo>() {
++            @Override
++            public void accept(LeakQueue.LeakMemoryInfo leakMemoryInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.LEAK, leakMemoryInfo);
++            }
++        });
++        GodEye.instance().observeModule(GodEye.ModuleName.PAGELOAD, new Consumer<PageLifecycleEventInfo>() {
++            @Override
++            public void accept(PageLifecycleEventInfo pageLifecycleEventInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.PAGELOAD, pageLifecycleEventInfo);
++            }
++        });
++        GodEye.instance().observeModule(GodEye.ModuleName.APP_SIZE, new Consumer<AppSizeInfo>() {
++            @Override
++            public void accept(AppSizeInfo appSizeInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.APP_SIZE, appSizeInfo);
++            }
++        });
++        GodEye.instance().observeModule(GodEye.ModuleName.CPU, new Consumer<CpuInfo>() {
++            @Override
++            public void accept(CpuInfo cpuInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.CPU, cpuInfo);
++            }
++        });
++        GodEye.instance().observeModule(GodEye.ModuleName.BATTERY, new Consumer<BatteryInfo>() {
++            @Override
++            public void accept(BatteryInfo batteryInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.BATTERY, batteryInfo);
++            }
++        });
++        GodEye.instance().observeModule(GodEye.ModuleName.FPS, new Consumer<FpsInfo>() {
++            @Override
++            public void accept(FpsInfo fpsInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.FPS, fpsInfo);
++            }
++        });
++        GodEye.instance().observeModule(GodEye.ModuleName.HEAP, new Consumer<HeapInfo>() {
++            @Override
++            public void accept(HeapInfo heapInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.HEAP, heapInfo);
++            }
++        });
++        GodEye.instance().observeModule(GodEye.ModuleName.PSS, new Consumer<PssInfo>() {
++            @Override
++            public void accept(PssInfo pssInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.PSS, pssInfo);
++            }
++        });
++        GodEye.instance().observeModule(GodEye.ModuleName.RAM, new Consumer<RamInfo>() {
++            @Override
++            public void accept(RamInfo ramInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.RAM, ramInfo);
++            }
++        });
++        GodEye.instance().observeModule(GodEye.ModuleName.TRAFFIC, new Consumer<TrafficInfo>() {
++            @Override
++            public void accept(TrafficInfo trafficInfo) throws Exception {
++                mConsumer.accept(GodEye.ModuleName.TRAFFIC, trafficInfo);
++            }
++        });
++//        GodEye.instance().observeModule(GodEye.ModuleName.VIEW_CANARY, new Consumer<ViewIssueInfo>() {
++//            @Override
++//            public void accept(ViewIssueInfo viewIssueInfo) throws Exception {
++//                mConsumer.accept(GodEye.ModuleName.VIEW_CANARY, viewIssueInfo);
++//            }
++//        });
++//        GodEye.instance().observeModule(GodEye.ModuleName.CRASH, (List<CrashInfo> crashInfos) -> {
++//            mConsumer.accept(GodEye.ModuleName.CRASH, crashInfos);
++//        });
++//        GodEye.instance().observeModule(GodEye.ModuleName.NETWORK, new Consumer<NetworkInfo<HttpContent>>() {
++//            @Override
++//            public void accept(NetworkInfo<HttpContent> networkContentNetworkInfo) throws Exception {
++//                mConsumer.accept(GodEye.ModuleName.NETWORK, networkContentNetworkInfo);
++//            }
++//        });
++//        GodEye.instance().observeModule(GodEye.ModuleName.IMAGE_CANARY, new Consumer<ImageIssue>() {
++//            @Override
++//            public void accept(ImageIssue imageIssue) throws Exception {
++//                mConsumer.accept(GodEye.ModuleName.IMAGE_CANARY, imageIssue);
++//            }
++//        });
++//        GodEye.instance().observeModule(GodEye.ModuleName.THREAD, new Consumer<List<ThreadInfo>>() {
++//
++//            @Override
++//            public void accept(List<ThreadInfo> threadInfos) throws Exception {
++//                mConsumer.accept(GodEye.ModuleName.THREAD, threadInfos);
++//            }
++//        });
++    }
++
++    public Application getApplication() {
++        return GodEye.instance().getApplication();
++    }
++}
+Index: app/src/main/java/com/douban/frodo/eye/EyeConsumer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/douban/frodo/eye/EyeConsumer.java	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
++++ app/src/main/java/com/douban/frodo/eye/EyeConsumer.java	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
+@@ -0,0 +1,5 @@
++package com.douban.frodo.eye;
++
++public interface EyeConsumer {
++    void accept(String tag, Object data);
++}
+Index: app/src/main/java/com/douban/frodo/eye/EyeLogConsumer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/douban/frodo/eye/EyeLogConsumer.java	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
++++ app/src/main/java/com/douban/frodo/eye/EyeLogConsumer.java	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
+@@ -0,0 +1,51 @@
++package com.douban.frodo.eye;
++
++import android.content.pm.PackageInfo;
++import android.content.pm.PackageManager;
++import android.os.BatteryManager;
++import android.os.Build;
++import android.util.Log;
++
++import com.alibaba.fastjson.JSONObject;
++import com.douban.frodo.FrodoApplication;
++
++import cn.hikyson.godeye.core.GodEye;
++import cn.hikyson.godeye.core.internal.modules.battery.BatteryInfo;
++
++import static android.content.Context.BATTERY_SERVICE;
++
++public class EyeLogConsumer implements EyeConsumer {
++    private static final String TAG = "Eye";
++
++    private volatile boolean mNeedBaseInfo = true;
++
++    @Override
++    public void accept(String tag, Object data) {
++        if (mNeedBaseInfo) {
++            mNeedBaseInfo = false;
++            PackageManager packageManager = Eye.instance().getApplication().getPackageManager();
++            try {
++                PackageInfo packageInfo = packageManager.getPackageInfo(Eye.instance().getApplication().getPackageName(), 0);
++
++                JSONObject jsonObject = new JSONObject();
++                jsonObject.put("APP_PACKAGE_NAME", packageInfo.packageName);
++                jsonObject.put("APP_VERSION_NAME", packageInfo.versionName);
++                jsonObject.put("APP_VERSION_CODE", packageInfo.versionCode);
++                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
++                    jsonObject.put("APP_MIN_SDK_VERSION", Eye.instance().getApplication().getApplicationInfo().minSdkVersion);
++                    jsonObject.put("APP_TARGET_SDK_VERSION", Eye.instance().getApplication().getApplicationInfo().targetSdkVersion);
++                }
++                jsonObject.put("SYSTEM_VERSION", Build.VERSION.RELEASE);
++                jsonObject.put("SYSTEM_BRAND", Build.BRAND + " " + Build.MODEL);
++                Log.d(TAG, "tag:BASE_INFO data:" + jsonObject.toJSONString());
++
++                BatteryManager manager = (BatteryManager) Eye.instance().getApplication().getSystemService(BATTERY_SERVICE);
++                BatteryInfo batteryInfo = new BatteryInfo(-1, -1, false, manager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY), -1, -1, -1, -1, "");
++                Log.d(TAG, "tag:" + GodEye.ModuleName.BATTERY + " data:" + JSONObject.toJSONString(batteryInfo));
++            } catch (PackageManager.NameNotFoundException e) {
++                e.printStackTrace();
++            }
++        }
++        Log.d(TAG, "tag:" + tag + " data:" + JSONObject.toJSONString(data));
++    }
++}
+Index: build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- build.gradle	(revision aef837f89e46b245e63f3b302de3227e2f16aae5)
++++ build.gradle	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
+@@ -33,6 +33,7 @@
+         classpath 'com.tencent.bugly:symtabfileuploader:2.2.1'
+         classpath "org.jacoco:org.jacoco.core:0.7.9"
+         classpath 'de.undercouch:gradle-download-task:3.4.3'
++        classpath "cn.hikyson.methodcanary:plugin:0.15.4"
+     }
+ }
+ 
+Index: gradle.properties
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- gradle.properties	(revision aef837f89e46b245e63f3b302de3227e2f16aae5)
++++ gradle.properties	(revision 26dbfc595eeed4c95f71165ca67793bacbe8d1cf)
+@@ -27,4 +27,6 @@
+ org.gradle.configureondemand=true
+ systemProp.http.proxyHost=douproxy.intra.douban.com
+ systemProp.http.proxyPort=8118
+-systemProp.http.nonProxyHosts=*.douban.com|localhost
+\ No newline at end of file
++systemProp.http.nonProxyHosts=*.douban.com|localhost
++
++EYE_VERSION=3.2.2
+\ No newline at end of file
