@@ -1,7 +1,7 @@
 
 <pre>
 FieldsFormatter.py
-</pre>
+
 主要是用来格式化资源文件（如：string），适用于字段不统一的国际化资源，通过打补丁的方式保证字段的完整性。然后将文件国际化。避免了人工手动的繁琐，方便codeReview也提高了研发效率。
 
 达到的目的：找出最完整的字段信息，并将不同资源中（国际化：中文，英文等资源文件）字段的位置统一。
@@ -16,10 +16,10 @@ FieldsFormatter.py
       然后将all.xml备份a，并对应将english.xml中字段的值在a中替换（中文的值修改为英文），最后输出新的chinese.xml,english.xml文件(此时的文件，
       即可达到字段的同步（不遗漏，位置对应）)。
       以此类推，可以实现不同语言中字段的同步。
+</pre>
 
 <pre>
 SMParser.py
-</pre>
 主要用力整理StrictMode生成的日志包括合并、去重、排序等。
 可以在项目中使用StrictMode，用adb logcat -s StrictMode  > log.txt生成日志，然后放置与SMParser.py同级目录并运行。
 StrictMode示例：
@@ -35,29 +35,34 @@ public class StrictModeManager {
                 .build());
     }
 }
+</pre>
 
 <pre>
 parser.py
-</pre>
 按照excel中的列（可一对多）归并为xml中的结构。input是实例文件，output是归并结果（可能需要手动导入xlrd库：pip3 install xlrd）
+
+</pre>
 
 
 <pre>
 night-mode.py
-</pre>
 用来统一颜色，将定义相同颜色值的color引用到相同的color，方便夜间模式的修改，也方便后续的维护。使用方法：将apk反编译拿到colors，在同级目录运行即可
+
+</pre>
 
 
 <pre>
 layoutParser.py 
-</pre>
 遍历Android中的所有布局的层级并排序输出（然后将层级到的布局使用约束布局去优化，参数需要指定layout的目录。如：python3 LayoutParser.py /Users/igor/workspace/app/res/layout
+
+</pre>
 
 
 <pre>
 EyeLogParser.py
-</pre>
+
 用来解析GodEye生产出来的日志，可以展示一段时间内被测的情况从而进一步优化。通过指定apk的路径得到大小，然后反编译后用LayoutParser得到应用的布局层级。其中BASE_INFO的数据GodEye没有，是从app中输出的，GodEye集成见eye_monitor.patch。最终展示信息如:
+</pre>
 <pre>
 {
     "===================基本信息===================":"",
